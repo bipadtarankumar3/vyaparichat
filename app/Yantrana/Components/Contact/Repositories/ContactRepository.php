@@ -82,10 +82,20 @@ class ContactRepository extends BaseRepository implements ContactRepositoryInter
             });
         }
 
-        // Default order by created_at DESC if no specific order received
+        // Order by created_at DESC and _id DESC by default so newly imported contacts always appear first
         $order = request('order');
-        if (empty($order)) {
-            $query->orderBy('contacts.created_at', 'desc');
+        $columns = request('columns', []);
+        $sortColumn = null;
+        if (!empty($order) && isset($order[0]['column']) && isset($columns[$order[0]['column']]['data'])) {
+            $sortColumn = $columns[$order[0]['column']]['data'];
+        }
+
+        if (empty($order) || in_array($sortColumn, ['none', '', null, 'created_at', '_id'])) {
+            $sortDir = (!empty($order) && isset($order[0]['dir']) && in_array(strtolower($order[0]['dir']), ['asc', 'desc']))
+                ? strtolower($order[0]['dir'])
+                : 'desc';
+            $query->orderBy('contacts.created_at', $sortDir)
+                  ->orderBy('contacts._id', $sortDir);
         }
 
         return $query->dataTables($dataTableConfig)->toArray();
@@ -351,9 +361,9 @@ class ContactRepository extends BaseRepository implements ContactRepositoryInter
      */
     public function getAllContactsForTheVendorLazily($vendorId, $callback)
     {
-        return $this->primaryModel::with(['groups', 'customFieldValues'])->where([
+        return $this->primaryModel::with(['groups', 'customFieldValues', 'assignedUser', 'labels'])->where([
             'vendors__id' => $vendorId
-        ])->lazy()->each($callback);
+        ])->orderBy('contacts.created_at', 'desc')->orderBy('contacts._id', 'desc')->lazy()->each($callback);
     }
 
     /**

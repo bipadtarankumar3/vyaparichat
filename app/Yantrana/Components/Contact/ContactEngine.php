@@ -728,10 +728,16 @@ class ContactEngine extends BaseEngine implements ContactEngineInterface
             'First Name' => 'string',
             'Last Name' => 'string',
             'Mobile Number' => 'string',
+            'Assign Team' => 'string',
+            'Tags' => 'string',
+            'Notes' => 'string',
             'Language Code' => 'string',
             'Country' => 'string',
             'Email' => 'string',
             'Groups' => 'string',
+            'Marketing' => 'string',
+            'AI Bot' => 'string',
+            'Created On' => 'string',
         ]);
         // required data like fields and groups
         $contactsRequiredData = $this->prepareContactRequiredData();
@@ -761,31 +767,55 @@ class ContactEngine extends BaseEngine implements ContactEngineInterface
                 ],
             ], ['_id','name'])->keyBy('_id')->toArray();
             // contacts
-            $this->contactRepository->getAllContactsForTheVendorLazily($vendorId, function (object $contact) use (&$countries, &$writer) {
-                $dataItem = [
-                    $contact->first_name,
-                    $contact->last_name,
-                    // phone number
-                    $contact->wa_id,
-                    $contact->language_code,
-                    $countries[$contact->countries__id]['name'] ?? null,
-                    $contact->email,
-                ];
-                // group
-                if ($contact->groups) {
-                    $groupItems = [];
+            $this->contactRepository->getAllContactsForTheVendorLazily($vendorId, function (object $contact) use (&$countries, &$writer, &$vendorContactCustomFields) {
+                // Assign Team Member name
+                $assignedUserName = '';
+                if (!empty($contact->assignedUser)) {
+                    $assignedUserName = trim(($contact->assignedUser->first_name ?? '') . ' ' . ($contact->assignedUser->last_name ?? ''));
+                }
+
+                // Tags / Labels
+                $tags = [];
+                if (!empty($contact->labels)) {
+                    foreach ($contact->labels as $label) {
+                        $tags[] = $label->title;
+                    }
+                }
+
+                // Notes
+                $notes = $contact->__data['contact_notes'] ?? $contact->contact_notes ?? '';
+
+                // Groups
+                $groupItems = [];
+                if (!empty($contact->groups)) {
                     foreach ($contact->groups as $group) {
                         $groupItems[] = $group->title;
                     }
-                    $dataItem[] = implode(',', $groupItems);
-                    unset($groupItems);
                 }
-                // custom fields
-                if ($contact->customFieldValues) {
-                    foreach ($contact->customFieldValues as $customFieldValue) {
-                        $dataItem[] = $customFieldValue->field_value;
-                    }
+
+                $dataItem = [
+                    (string) ($contact->first_name ?? ''),
+                    (string) ($contact->last_name ?? ''),
+                    // phone number
+                    (string) ($contact->wa_id ?? ''),
+                    (string) $assignedUserName,
+                    (string) implode(', ', $tags),
+                    (string) $notes,
+                    (string) ($contact->language_code ?? ''),
+                    (string) ($countries[$contact->countries__id]['name'] ?? ''),
+                    (string) ($contact->email ?? ''),
+                    (string) implode(', ', $groupItems),
+                    (string) ($contact->whatsapp_opt_out ? __tr('Opted Out') : __tr('Opted In')),
+                    (string) ($contact->disable_ai_bot ? __tr('Disabled') : __tr('Enabled')),
+                    (string) ($contact->created_at ? formatDateTime($contact->created_at) : ''),
+                ];
+
+                // custom fields mapped accurately by ID
+                $customFieldValues = $contact->customFieldValues?->keyBy('contact_custom_fields__id');
+                foreach ($vendorContactCustomFields as $vendorContactCustomField) {
+                    $dataItem[] = (string) ($customFieldValues?->get($vendorContactCustomField->_id)?->field_value ?? '');
                 }
+
                 // write to sheet
                 $writer->writeSheetRow('Contacts', $dataItem);
                 unset($dataItem);
@@ -1030,6 +1060,8 @@ class ContactEngine extends BaseEngine implements ContactEngineInterface
                                 $headerColMap['country'] = $cellIndex;
                             } elseif (str_contains($h, 'group')) {
                                 $headerColMap['groups'] = $cellIndex;
+                            } elseif (str_contains($h, 'note')) {
+                                $headerColMap['notes'] = $cellIndex;
                             }
                         }
                         if (!isset($headerColMap['wa_id'])) {
@@ -1082,6 +1114,9 @@ class ContactEngine extends BaseEngine implements ContactEngineInterface
                         $existingData = [];
                     }
                     $existingData['is_imported'] = 1;
+                    if (isset($headerColMap['notes']) && isset($cellValues[$headerColMap['notes']])) {
+                        $existingData['contact_notes'] = $cellValues[$headerColMap['notes']];
+                    }
 
                     $contactsToUpdate[$rowIndex] = [
                         '_uid' => Arr::get($contact, '_uid') ?: (string) Str::uuid(),

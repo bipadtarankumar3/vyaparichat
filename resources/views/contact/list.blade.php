@@ -490,8 +490,8 @@ $groupDescription = $groupUid ? $currentGroup->description : '';
             <x-lw.datatable data-page-length="100" id="lwContactList" :url="route('vendor.contact.read.list', [
                 'groupUid' => $groupUid
             ])">
-                <th style="width: 1px;padding:0;" data-name="none"></th>
-                <th data-name="none" data-template="#lwSelectMultipleContactsCheckbox">{{ __tr('Select') }}</th>
+                <th style="width: 1px;padding:0;" data-orderable="false" data-name="none"></th>
+                <th data-orderable="false" data-name="none" data-template="#lwSelectMultipleContactsCheckbox">{{ __tr('Select') }}</th>
                 <th data-orderable="true" data-name="first_name">{{ __tr('First Name') }}</th>
                 <th data-orderable="true" data-name="last_name">{{ __tr('Last Name') }}</th>
                 <th data-name="phone_number">{{ __tr('Mobile Number') }}</th>
@@ -587,6 +587,9 @@ $groupDescription = $groupUid ? $currentGroup->description : '';
         data.from_date = $('#lwFilterFromDate').val();
         data.to_date = $('#lwFilterToDate').val();
         data.contact_tab = $('#lwContactTabs .lw-contact-tab.active').data('tab') || 'live_chat';
+        if (!data.order || !data.order.length || data.order[0].column === 0 || data.order[0].column === 1) {
+            data.order = [{ column: 9, dir: 'desc' }];
+        }
     });
 
     // Tab change
