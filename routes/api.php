@@ -5,6 +5,7 @@ use App\Http\Controllers\Vendor\ContactController;
 use App\Http\Controllers\Vendor\ContactCustomFieldController;
 use App\Http\Controllers\Vendor\ContactGroupController;
 use App\Http\Controllers\Vendor\LabelController;
+use App\Http\Controllers\Vendor\WhatsAppTemplateController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -45,6 +46,16 @@ Route::apiResource('labels', LabelController::class)->names('api.labels');
 
 // Custom Fields
 Route::apiResource('custom-fields', ContactCustomFieldController::class)->names('api.custom_fields');
+
+// WhatsApp Templates Management
+Route::prefix('whatsapp/templates')->group(function () {
+    Route::get('/', [WhatsAppTemplateController::class, 'index'])->name('api.whatsapp_templates.index');
+    Route::post('/', [WhatsAppTemplateController::class, 'store'])->name('api.whatsapp_templates.store');
+    Route::post('/sync', [WhatsAppTemplateController::class, 'sync'])->name('api.whatsapp_templates.sync');
+    Route::get('/{template}', [WhatsAppTemplateController::class, 'show'])->name('api.whatsapp_templates.show');
+    Route::post('/{template}/preview', [WhatsAppTemplateController::class, 'preview'])->name('api.whatsapp_templates.preview');
+    Route::delete('/{template}', [WhatsAppTemplateController::class, 'destroy'])->name('api.whatsapp_templates.destroy');
+});
 
 // Health check endpoint
 Route::get('/health', function () {

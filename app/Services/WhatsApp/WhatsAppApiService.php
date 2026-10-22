@@ -31,7 +31,9 @@ class WhatsAppApiService
      */
     protected function getWabaId(Vendor $vendor): ?string
     {
-        return $vendor->whatsapp_business_account_id ?: $vendor->getSetting('whatsapp_business_account_id');
+        return $vendor->whatsapp_business_account_id
+            ?: ($vendor->getSetting('whatsapp_business_account_id')
+                ?: $vendor->getSetting('whatsapp_waba_id'));
     }
 
     /**
@@ -232,6 +234,88 @@ class WhatsAppApiService
             ];
         } catch (\Throwable $e) {
             Log::error('Fetch WhatsApp Templates Error: ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Create / submit a WhatsApp Template to Meta Graph API.
+     */
+    public function createTemplate(Vendor $vendor, array $templateData): array
+    {
+        $wabaId = $this->getWabaId($vendor);
+        $token = $this->getAccessToken($vendor);
+
+        if (!$wabaId || !$token) {
+            return ['success' => false, 'error' => 'WhatsApp Cloud API credentials not configured.'];
+        }
+
+        try {
+            $response = Http::withToken($token)
+                ->asJson()
+                ->post("{$this->apiBase}/{$wabaId}/message_templates", [
+                    'name' => strtolower(trim($templateData['name'])),
+                    'category' => strtoupper(trim($templateData['category'])),
+                    'language' => trim($templateData['language'] ?? 'en_US'),
+                    'components' => $templateData['components'] ?? [],
+                ]);
+
+            $body = $response->json();
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'meta_template_id' => $body['id'] ?? null,
+                    'status' => $body['status'] ?? 'PENDING',
+                    'data' => $body,
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => $body['error']['message'] ?? 'Failed to create template on Meta.',
+                'data' => $body,
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Create WhatsApp Template Error: ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Delete a WhatsApp Template from Meta Graph API.
+     */
+    public function deleteTemplate(Vendor $vendor, string $templateName, ?string $templateId = null): array
+    {
+        $wabaId = $this->getWabaId($vendor);
+        $token = $this->getAccessToken($vendor);
+
+        if (!$wabaId || !$token) {
+            return ['success' => false, 'error' => 'WhatsApp Cloud API credentials not configured.'];
+        }
+
+        try {
+            $params = ['name' => $templateName];
+            if ($templateId) {
+                $params['hsm_id'] = $templateId;
+            }
+
+            $response = Http::withToken($token)
+                ->delete("{$this->apiBase}/{$wabaId}/message_templates", $params);
+
+            $body = $response->json();
+
+            if ($response->successful() && ($body['success'] ?? false)) {
+                return ['success' => true, 'data' => $body];
+            }
+
+            return [
+                'success' => false,
+                'error' => $body['error']['message'] ?? 'Failed to delete template from Meta.',
+                'data' => $body,
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Delete WhatsApp Template Error: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
