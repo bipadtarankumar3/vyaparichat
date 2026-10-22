@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\WhatsAppWebhookController;
+use App\Http\Controllers\Vendor\BillingController;
 use App\Http\Controllers\Vendor\BotFlowController;
 use App\Http\Controllers\Vendor\BotReplyController;
 use App\Http\Controllers\Vendor\CampaignController;
@@ -90,6 +92,21 @@ Route::prefix('chat')->group(function () {
 Route::post('bot-replies/simulate', [BotReplyController::class, 'simulate'])->name('api.bot_replies.simulate');
 Route::apiResource('bot-replies', BotReplyController::class)->names('api.bot_replies');
 Route::apiResource('bot-flows', BotFlowController::class)->names('api.bot_flows');
+
+// SaaS Subscriptions & Billing
+Route::prefix('billing')->group(function () {
+    Route::get('/plans', [BillingController::class, 'plans'])->name('api.billing.plans');
+    Route::get('/subscription', [BillingController::class, 'currentSubscription'])->name('api.billing.subscription');
+    Route::post('/checkout', [BillingController::class, 'checkout'])->name('api.billing.checkout');
+    Route::post('/manual-payment', [BillingController::class, 'submitManualPayment'])->name('api.billing.manual_payment');
+    Route::get('/transactions', [BillingController::class, 'transactions'])->name('api.billing.transactions');
+});
+
+// Payment Gateway Webhooks
+Route::prefix('webhook/payments')->group(function () {
+    Route::post('/stripe', [PaymentWebhookController::class, 'stripeWebhook'])->name('api.payment.webhook.stripe');
+    Route::post('/razorpay', [PaymentWebhookController::class, 'razorpayWebhook'])->name('api.payment.webhook.razorpay');
+});
 
 // Health check endpoint
 Route::get('/health', function () {
