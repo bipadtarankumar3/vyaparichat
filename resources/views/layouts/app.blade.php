@@ -56,6 +56,32 @@
 </head>
 <body class="h-full flex flex-col overflow-hidden bg-slate-950 font-sans selection:bg-brand-500 selection:text-white">
 
+    <!-- Super Admin Impersonation / Console Switch Banner -->
+    @if(session()->has('impersonated_vendor_id') || (Auth::check() && Auth::user()->is_super_admin))
+        <div class="bg-gradient-to-r from-purple-950 via-indigo-950 to-slate-900 border-b border-purple-500/40 px-4 py-2 flex items-center justify-between text-xs text-purple-200 z-50 shadow-md">
+            <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-300 font-bold uppercase tracking-wider text-[10px] border border-purple-500/40">
+                    ⚡ Super Admin Session
+                </span>
+                <span>You are currently managing <strong>{{ $vendor->name }}</strong> workspace.</span>
+            </div>
+            <div class="flex items-center gap-2">
+                @if(session()->has('impersonated_vendor_id'))
+                    <form method="POST" action="{{ route('admin.impersonate.leave') }}">
+                        @csrf
+                        <button type="submit" class="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-md shadow-purple-500/20">
+                            <span>← Return to Admin Dashboard</span>
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('admin.vendors') }}" class="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-md shadow-purple-500/20">
+                        <span>← Admin Central Console</span>
+                    </a>
+                @endif
+            </div>
+        </div>
+    @endif
+
     <!-- Top Navigation Bar -->
     <header class="h-16 flex-shrink-0 border-b border-slate-800 bg-slate-900/80 backdrop-blur px-4 sm:px-6 flex items-center justify-between z-30">
         <div class="flex items-center gap-3">
@@ -75,6 +101,12 @@
 
         <!-- Vendor & Status Pill -->
         <div class="flex items-center gap-4">
+            @if(Auth::check() && Auth::user()->is_super_admin)
+                <a href="{{ route('admin.vendors') }}" class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-xs font-bold text-purple-300 hover:bg-purple-500/20 transition">
+                    <span>🛡️ Admin Console</span>
+                </a>
+            @endif
+
             <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/60 text-xs">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span class="text-slate-300 font-medium">{{ $vendor->name ?? 'Default Vendor' }}</span>
@@ -109,6 +141,7 @@
                     <span>Dashboard</span>
                 </a>
 
+                @if($vendor->hasSectionAccess('chat'))
                 <a href="{{ route('web.chat') }}" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm font-semibold transition {{ ($activeNav ?? '') === 'chat' ? 'bg-brand-600/15 text-brand-400 border-brand-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent' }}">
                     <div class="flex items-center gap-3">
                         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
@@ -116,36 +149,49 @@
                     </div>
                     <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30">Live</span>
                 </a>
+                @endif
 
+                @if($vendor->hasSectionAccess('contacts'))
                 <a href="{{ route('web.contacts') }}" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm font-semibold transition {{ ($activeNav ?? '') === 'contacts' ? 'bg-brand-600/15 text-brand-400 border-brand-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                     <span>Audience & CRM</span>
                 </a>
+                @endif
 
+                @if($vendor->hasSectionAccess('campaigns'))
                 <a href="{{ route('web.campaigns') }}" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm font-semibold transition {{ ($activeNav ?? '') === 'campaigns' ? 'bg-brand-600/15 text-brand-400 border-brand-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
                     <span>Broadcast Campaigns</span>
                 </a>
+                @endif
 
+                @if($vendor->hasSectionAccess('templates'))
                 <a href="{{ route('web.templates') }}" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm font-semibold transition {{ ($activeNav ?? '') === 'templates' ? 'bg-brand-600/15 text-brand-400 border-brand-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <span>WhatsApp Templates</span>
                 </a>
+                @endif
 
+                @if($vendor->hasSectionAccess('bot'))
                 <a href="{{ route('web.bot') }}" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm font-semibold transition {{ ($activeNav ?? '') === 'automations' ? 'bg-brand-600/15 text-brand-400 border-brand-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                     <span>Bot & AI Copilot</span>
                 </a>
+                @endif
 
+                @if($vendor->hasSectionAccess('integrations'))
                 <a href="{{ route('web.integrations') }}" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm font-semibold transition {{ ($activeNav ?? '') === 'integrations' ? 'bg-brand-600/15 text-brand-400 border-brand-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                     <span>E-Commerce & API</span>
                 </a>
+                @endif
 
+                @if($vendor->hasSectionAccess('billing'))
                 <a href="{{ route('web.billing') }}" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm font-semibold transition {{ ($activeNav ?? '') === 'billing' ? 'bg-brand-600/15 text-brand-400 border-brand-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                     <span>Plans & Billing</span>
                 </a>
+                @endif
 
                 <a href="{{ route('web.settings') }}" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm font-semibold transition {{ ($activeNav ?? '') === 'settings' ? 'bg-brand-600/15 text-brand-400 border-brand-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -153,7 +199,17 @@
                 </a>
             </nav>
 
-            <div class="p-3 border-t border-slate-800">
+            <div class="p-3 border-t border-slate-800 space-y-2">
+                @if(Auth::check() && Auth::user()->is_super_admin)
+                    <a href="{{ route('admin.vendors') }}" class="w-full flex items-center justify-between p-2 rounded-xl bg-purple-950/60 border border-purple-800/40 text-xs text-purple-300 hover:bg-purple-900/60 transition">
+                        <span class="font-bold flex items-center gap-1.5">
+                            <span>🛡️</span>
+                            <span>Admin Console</span>
+                        </span>
+                        <span class="text-[10px]">&rarr;</span>
+                    </a>
+                @endif
+
                 <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-400 flex items-center justify-between">
                     <div>
                         <div class="font-semibold text-slate-200">Server Health</div>

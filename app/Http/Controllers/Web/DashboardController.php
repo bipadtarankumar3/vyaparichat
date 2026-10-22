@@ -30,6 +30,13 @@ class DashboardController extends Controller
      */
     protected function getActiveVendor(Request $request): Vendor
     {
+        if ($request->session()->has('impersonated_vendor_id')) {
+            $impersonated = Vendor::find($request->session()->get('impersonated_vendor_id'));
+            if ($impersonated) {
+                return $impersonated;
+            }
+        }
+
         $user = $request->user();
         if ($user && $user->vendors()->exists()) {
             return $user->vendors()->first();

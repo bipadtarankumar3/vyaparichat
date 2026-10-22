@@ -22,3 +22,14 @@ Route::get('/bot', [DashboardController::class, 'bot'])->name('web.bot');
 Route::get('/integrations', [DashboardController::class, 'integrations'])->name('web.integrations');
 Route::get('/billing', [DashboardController::class, 'billing'])->name('web.billing');
 Route::get('/settings', [DashboardController::class, 'settings'])->name('web.settings');
+
+// Super Admin Central Console & Impersonation
+Route::middleware(['auth', \App\Http\Middleware\SuperAdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Admin\AdminVendorController::class, 'index'])->name('dashboard');
+    Route::get('/vendors', [\App\Http\Controllers\Admin\AdminVendorController::class, 'index'])->name('vendors');
+    Route::post('/vendors', [\App\Http\Controllers\Admin\AdminVendorController::class, 'store'])->name('vendors.store');
+    Route::post('/vendors/{vendor}/status', [\App\Http\Controllers\Admin\AdminVendorController::class, 'toggleStatus'])->name('vendors.status');
+    Route::post('/vendors/{vendor}/permissions', [\App\Http\Controllers\Admin\AdminVendorController::class, 'updatePermissions'])->name('vendors.permissions');
+    Route::post('/vendors/{vendor}/impersonate', [\App\Http\Controllers\Admin\AdminVendorController::class, 'impersonate'])->name('vendors.impersonate');
+    Route::post('/impersonate/leave', [\App\Http\Controllers\Admin\AdminVendorController::class, 'leaveImpersonation'])->name('impersonate.leave');
+});

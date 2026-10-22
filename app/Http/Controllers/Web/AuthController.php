@@ -18,6 +18,9 @@ class AuthController extends Controller
     public function showLogin(): View|RedirectResponse
     {
         if (Auth::check()) {
+            if (Auth::user()->is_super_admin) {
+                return redirect()->route('admin.vendors');
+            }
             return redirect()->route('dashboard');
         }
 
@@ -38,6 +41,11 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
+
+            if (Auth::user()->is_super_admin) {
+                return redirect()->intended(route('admin.vendors'));
+            }
+
             return redirect()->intended(route('dashboard'));
         }
 

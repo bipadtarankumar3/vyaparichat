@@ -25,7 +25,28 @@ class Vendor extends Model
         'whatsapp_status',
         'whatsapp_phone_number_id',
         'whatsapp_business_account_id',
+        'custom_permissions',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'custom_permissions' => 'array',
+        ];
+    }
+
+    /**
+     * Check if vendor has access to a specific section/module.
+     * Allowed keys: 'chat', 'contacts', 'campaigns', 'templates', 'bot', 'integrations', 'billing', 'settings'
+     */
+    public function hasSectionAccess(string $section): bool
+    {
+        if (is_array($this->custom_permissions) && array_key_exists($section, $this->custom_permissions)) {
+            return (bool) $this->custom_permissions[$section];
+        }
+
+        return true;
+    }
 
     /**
      * Settings key-value pairs for this vendor.
