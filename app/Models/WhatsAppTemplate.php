@@ -12,6 +12,8 @@ class WhatsAppTemplate extends Model
 {
     use HasFactory, HasUuid;
 
+    protected $table = 'whatsapp_templates';
+
     protected $fillable = [
         'uuid',
         'vendor_id',

@@ -11,6 +11,8 @@ class WhatsAppMessage extends Model
 {
     use HasFactory, HasUuid;
 
+    protected $table = 'whatsapp_messages';
+
     protected $fillable = [
         'uuid',
         'vendor_id',
