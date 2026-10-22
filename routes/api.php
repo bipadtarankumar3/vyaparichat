@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\WhatsAppWebhookController;
+use App\Http\Controllers\Vendor\BotFlowController;
+use App\Http\Controllers\Vendor\BotReplyController;
 use App\Http\Controllers\Vendor\CampaignController;
 use App\Http\Controllers\Vendor\ChatInboxController;
 use App\Http\Controllers\Vendor\ContactController;
@@ -83,6 +85,11 @@ Route::prefix('chat')->group(function () {
     Route::post('/conversations/{contact}/toggle-bot', [ChatInboxController::class, 'toggleBot'])->name('api.chat.toggle_bot');
     Route::post('/conversations/{contact}/notes', [ChatInboxController::class, 'updateNotes'])->name('api.chat.notes');
 });
+
+// Chatbot Automations (Keyword Auto-Replies & Visual Flows)
+Route::post('bot-replies/simulate', [BotReplyController::class, 'simulate'])->name('api.bot_replies.simulate');
+Route::apiResource('bot-replies', BotReplyController::class)->names('api.bot_replies');
+Route::apiResource('bot-flows', BotFlowController::class)->names('api.bot_flows');
 
 // Health check endpoint
 Route::get('/health', function () {

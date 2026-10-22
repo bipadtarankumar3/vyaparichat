@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Log;
 class WhatsAppWebhookHandler
 {
     public function __construct(
-        protected WhatsAppApiService $apiService
+        protected WhatsAppApiService $apiService,
+        protected \App\Services\Bot\BotAutomationService $botService
     ) {}
 
     /**
@@ -161,73 +162,9 @@ class WhatsAppWebhookHandler
             'delivered_at' => $timestamp,
         ]);
 
-        // 4. Trigger Keyword Bot Auto-Responder if active & not disabled for contact
+        // 4. Trigger Bot Auto-Responder / AI Copilot
         if (!$contact->is_ai_bot_disabled && !empty($messageText)) {
-            $this->checkAndTriggerBotReply($vendor, $contact, trim($messageText));
-        }
-    }
-
-    /**
-     * Check active bot replies and dispatch reply if keyword matches.
-     */
-    protected function checkAndTriggerBotReply(Vendor $vendor, Contact $contact, string $incomingText): void
-    {
-        $botReplies = BotReply::where('vendor_id', $vendor->id)
-            ->where('is_active', true)
-            ->orderBy('priority', 'desc')
-            ->get();
-
-        $incomingLower = strtolower($incomingText);
-
-        foreach ($botReplies as $bot) {
-            $matched = false;
-            $keywords = array_map('strtolower', $bot->trigger_keywords ?: []);
-
-            foreach ($keywords as $kw) {
-                if ($bot->trigger_type === 'exact' && $incomingLower === $kw) {
-                    $matched = true;
-                    break;
-                } elseif ($bot->trigger_type === 'starts_with' && str_starts_with($incomingLower, $kw)) {
-                    $matched = true;
-                    break;
-                } elseif ($bot->trigger_type === 'contains' && str_contains($incomingLower, $kw)) {
-                    $matched = true;
-                    break;
-                }
-            }
-
-            if ($matched) {
-                $this->dispatchBotReply($vendor, $contact, $bot);
-                break; // Stop after first highest priority bot match
-            }
-        }
-    }
-
-    /**
-     * Send bot reply message.
-     */
-    protected function dispatchBotReply(Vendor $vendor, Contact $contact, BotReply $bot): void
-    {
-        $payload = $bot->reply_payload ?: [];
-        $replyType = $bot->reply_type ?: 'text';
-
-        if ($replyType === 'text') {
-            $text = $payload['text'] ?? '';
-            if (!empty($text)) {
-                $res = $this->apiService->sendTextMessage($vendor, $contact->phone_number, $text);
-                if ($res['success']) {
-                    WhatsAppMessage::create([
-                        'vendor_id' => $vendor->id,
-                        'contact_id' => $contact->id,
-                        'wamid' => $res['wamid'],
-                        'direction' => 'outbound',
-                        'message_type' => 'text',
-                        'message_text' => $text,
-                        'status' => 'sent',
-                        'sent_at' => now(),
-                    ]);
-                }
-            }
+            $this->botService->matchAndReply($vendor, $contact, trim($messageText));
         }
     }
 }
