@@ -187,4 +187,112 @@ class DashboardController extends Controller
             'activeNav' => 'settings',
         ]);
     }
+
+    /**
+     * Dedicated Contact Groups Page.
+     */
+    public function contactGroups(Request $request): View
+    {
+        $vendor = $this->getActiveVendor($request);
+        $groups = ContactGroup::where('vendor_id', $vendor->id)->withCount('contacts')->get();
+
+        return view('pages.contact-groups', [
+            'vendor' => $vendor,
+            'groups' => $groups,
+            'activeNav' => 'contacts_groups',
+        ]);
+    }
+
+    /**
+     * Dedicated Add Input / Custom Fields Page.
+     */
+    public function customFields(Request $request): View
+    {
+        $vendor = $this->getActiveVendor($request);
+        $fields = \App\Models\ContactCustomField::where('vendor_id', $vendor->id)->get();
+
+        return view('pages.custom-fields', [
+            'vendor' => $vendor,
+            'fields' => $fields,
+            'activeNav' => 'contacts_fields',
+        ]);
+    }
+
+    /**
+     * Dedicated Flow Maker / Bot Flows Page.
+     */
+    public function botFlows(Request $request): View
+    {
+        $vendor = $this->getActiveVendor($request);
+        $flows = BotFlow::where('vendor_id', $vendor->id)->get();
+
+        return view('pages.bot-flows', [
+            'vendor' => $vendor,
+            'flows' => $flows,
+            'activeNav' => 'bot_flows',
+        ]);
+    }
+
+    /**
+     * Dedicated Agents / Staff Management Page.
+     */
+    public function agents(Request $request): View
+    {
+        $vendor = $this->getActiveVendor($request);
+        $agents = $vendor->users()->get();
+
+        return view('pages.agents', [
+            'vendor' => $vendor,
+            'agents' => $agents,
+            'activeNav' => 'agents',
+        ]);
+    }
+
+    /**
+     * Store new Agent member for current Vendor.
+     */
+    public function storeAgent(Request $request)
+    {
+        $vendor = $this->getActiveVendor($request);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'password' => 'required|string|min:6',
+            'role' => 'required|in:admin,agent',
+        ]);
+
+        $user = \App\Models\User::firstOrCreate(
+            ['email' => $validated['email']],
+            [
+                'name' => $validated['name'],
+                'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+                'status' => 'active',
+                'is_super_admin' => false,
+            ]
+        );
+
+        $vendor->users()->syncWithoutDetaching([
+            $user->id => [
+                'role' => $validated['role'],
+                'permissions' => json_encode(['messaging', 'contacts', 'inbox']),
+                'status' => 'active',
+            ]
+        ]);
+
+        return back()->with('success', "Agent \"{$validated['name']}\" added successfully.");
+    }
+
+    /**
+     * Dedicated WhatsApp QR Code Page.
+     */
+    public function qrCode(Request $request): View
+    {
+        $vendor = $this->getActiveVendor($request);
+
+        return view('pages.qr-code', [
+            'vendor' => $vendor,
+            'activeNav' => 'qr_code',
+        ]);
+    }
 }

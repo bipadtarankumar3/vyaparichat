@@ -15,13 +15,26 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/', [DashboardController::class, 'index'])->name('home');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/chat', [DashboardController::class, 'chat'])->name('web.chat');
-Route::get('/contacts', [DashboardController::class, 'contacts'])->name('web.contacts');
-Route::get('/campaigns', [DashboardController::class, 'campaigns'])->name('web.campaigns');
 Route::get('/templates', [DashboardController::class, 'templates'])->name('web.templates');
+Route::get('/campaigns', [DashboardController::class, 'campaigns'])->name('web.campaigns');
+
+// Contacts & Submenu
+Route::get('/contacts', [DashboardController::class, 'contacts'])->name('web.contacts');
+Route::get('/contacts/groups', [DashboardController::class, 'contactGroups'])->name('web.contacts.groups');
+Route::get('/contacts/custom-fields', [DashboardController::class, 'customFields'])->name('web.contacts.custom-fields');
+
+// Chatbot & Flow Maker
 Route::get('/bot', [DashboardController::class, 'bot'])->name('web.bot');
-Route::get('/integrations', [DashboardController::class, 'integrations'])->name('web.integrations');
+Route::get('/bot/flows', [DashboardController::class, 'botFlows'])->name('web.bot.flows');
+
+// Agents, QR Code, My Plan, Setup
+Route::get('/agents', [DashboardController::class, 'agents'])->name('web.agents');
+Route::post('/agents', [DashboardController::class, 'storeAgent'])->name('web.agents.store');
+Route::get('/qr-code', [DashboardController::class, 'qrCode'])->name('web.qr-code');
+Route::get('/my-plan', [DashboardController::class, 'billing'])->name('web.my-plan');
 Route::get('/billing', [DashboardController::class, 'billing'])->name('web.billing');
 Route::get('/settings', [DashboardController::class, 'settings'])->name('web.settings');
+Route::get('/integrations', [DashboardController::class, 'integrations'])->name('web.integrations');
 
 // Super Admin Central Console & Impersonation
 Route::middleware(['auth', \App\Http\Middleware\SuperAdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {

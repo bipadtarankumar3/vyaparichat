@@ -135,4 +135,61 @@ class DashboardWebTest extends TestCase
         $response->assertSee('WhatsApp Cloud API', false);
         $response->assertSee('Meta WhatsApp Cloud API Configuration');
     }
+
+    /**
+     * Test agents page renders dedicated pages.agents blade view.
+     */
+    public function test_agents_page_renders_dedicated_blade_view(): void
+    {
+        $response = $this->get('/agents');
+        $response->assertStatus(200);
+        $response->assertViewIs('pages.agents');
+        $response->assertSee('Agents & Team Members', false);
+        $response->assertSee('Add New Agent');
+    }
+
+    /**
+     * Test QR Code page renders dedicated pages.qr-code blade view.
+     */
+    public function test_qr_code_page_renders_dedicated_blade_view(): void
+    {
+        $response = $this->get('/qr-code');
+        $response->assertStatus(200);
+        $response->assertViewIs('pages.qr-code');
+        $response->assertSee('WhatsApp Click-to-Chat QR Code', false);
+        $response->assertSee('Scan to Chat');
+    }
+
+    /**
+     * Test contact groups page renders dedicated pages.contact-groups blade view.
+     */
+    public function test_contact_groups_page_renders_dedicated_blade_view(): void
+    {
+        $response = $this->get('/contacts/groups');
+        $response->assertStatus(200);
+        $response->assertViewIs('pages.contact-groups');
+        $response->assertSee('Audience Contact Groups');
+    }
+
+    /**
+     * Test custom fields (Add Input) page renders dedicated pages.custom-fields blade view.
+     */
+    public function test_custom_fields_page_renders_dedicated_blade_view(): void
+    {
+        $response = $this->get('/contacts/custom-fields');
+        $response->assertStatus(200);
+        $response->assertViewIs('pages.custom-fields');
+        $response->assertSee('Custom Input Fields', false);
+    }
+
+    /**
+     * Test bot flows (Flow Maker) page renders dedicated pages.bot-flows blade view.
+     */
+    public function test_bot_flows_page_renders_dedicated_blade_view(): void
+    {
+        $response = $this->get('/bot/flows');
+        $response->assertStatus(200);
+        $response->assertViewIs('pages.bot-flows');
+        $response->assertSee('Chatbot Flow Maker');
+    }
 }
