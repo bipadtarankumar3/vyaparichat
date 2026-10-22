@@ -183,4 +183,71 @@ class AdminVendorManagementTest extends TestCase
         $leaveResponse->assertRedirect('/admin/vendors');
         $this->assertFalse(session()->has('impersonated_vendor_id'));
     }
+
+    /**
+     * Test Super Admin can access Central Executive Dashboard.
+     */
+    public function test_super_admin_can_access_executive_dashboard(): void
+    {
+        $response = $this->actingAs($this->superAdmin)->get('/admin/dashboard');
+
+        $response->assertStatus(200);
+        $response->assertSee('Executive Dashboard');
+        $response->assertSee('Platform MRR');
+        $response->assertSee('User Onboarding Analytics');
+        $response->assertSee('Infrastructure Health');
+    }
+
+    /**
+     * Test Super Admin can access User Plans (Auto & Manual).
+     */
+    public function test_super_admin_can_access_user_plans_and_manual_queue(): void
+    {
+        $autoResponse = $this->actingAs($this->superAdmin)->get('/admin/plans/subscriptions');
+        $autoResponse->assertStatus(200);
+        $autoResponse->assertSee('Auto Subscriptions');
+        $autoResponse->assertSee('Automated Gateway Recurring');
+
+        $manualResponse = $this->actingAs($this->superAdmin)->get('/admin/plans/manual');
+        $manualResponse->assertStatus(200);
+        $manualResponse->assertSee('Manual & Prepaid Subscriptions', false);
+        $manualResponse->assertSee('Pending Approval');
+    }
+
+    /**
+     * Test Super Admin can access CMS Pages, Languages, Setup, Embedded Signup, and Settings.
+     */
+    public function test_super_admin_can_access_all_admin_management_menus(): void
+    {
+        // 4. Pages
+        $pagesRes = $this->actingAs($this->superAdmin)->get('/admin/pages');
+        $pagesRes->assertStatus(200);
+        $pagesRes->assertSee('CMS & Landing Pages', false);
+        $pagesRes->assertSee('Terms of Service');
+
+        // 5. Languages
+        $langRes = $this->actingAs($this->superAdmin)->get('/admin/languages');
+        $langRes->assertStatus(200);
+        $langRes->assertSee('Languages & Localization', false);
+        $langRes->assertSee('English (US / UK)', false);
+
+        // 6. Setup
+        $setupRes = $this->actingAs($this->superAdmin)->get('/admin/setup');
+        $setupRes->assertStatus(200);
+        $setupRes->assertSee('System Core Setup');
+        $setupRes->assertSee('Application Identity');
+
+        // 7. Embedded Signup
+        $embeddedRes = $this->actingAs($this->superAdmin)->get('/admin/embedded-signup');
+        $embeddedRes->assertStatus(200);
+        $embeddedRes->assertSee('Meta Embedded Signup');
+        $embeddedRes->assertSee('Meta App ID');
+
+        // 8. Settings (with tabs)
+        $settingsRes = $this->actingAs($this->superAdmin)->get('/admin/settings/payment');
+        $settingsRes->assertStatus(200);
+        $settingsRes->assertSee('Razorpay Gateway');
+        $settingsRes->assertSee('Stripe Recurring Subscriptions');
+    }
 }
+

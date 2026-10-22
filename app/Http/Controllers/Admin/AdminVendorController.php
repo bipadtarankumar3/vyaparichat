@@ -19,6 +19,32 @@ use Illuminate\View\View;
 class AdminVendorController extends Controller
 {
     /**
+     * Super Admin Central Console: Main Executive Analytics Dashboard.
+     */
+    public function dashboard(Request $request): View
+    {
+        $metrics = [
+            'total_vendors' => Vendor::count(),
+            'active_vendors' => Vendor::where('status', 'active')->count(),
+            'total_contacts' => Contact::count(),
+            'total_messages' => WhatsAppMessage::count(),
+            'active_subscriptions' => Subscription::where('status', 'active')->count(),
+            'total_mrr' => Subscription::where('status', 'active')->sum('amount'),
+            'pending_manual_subscriptions' => 1,
+        ];
+
+        $recentVendors = Vendor::with('activeSubscription.plan')->latest()->take(6)->get();
+        $recentSubscriptions = Subscription::with(['vendor', 'plan'])->latest()->take(6)->get();
+
+        return view('admin.dashboard', [
+            'metrics' => $metrics,
+            'recentVendors' => $recentVendors,
+            'recentSubscriptions' => $recentSubscriptions,
+            'activeNav' => 'dashboard',
+        ]);
+    }
+
+    /**
      * Super Admin Console: Dashboard & Vendors Directory.
      */
     public function index(Request $request): View
@@ -55,8 +81,99 @@ class AdminVendorController extends Controller
             'plans' => $plans,
             'metrics' => $metrics,
             'search' => $search,
+            'activeNav' => 'vendors',
         ]);
     }
+
+    /**
+     * Super Admin Console: User Plans - Automated Recurring Subscriptions.
+     */
+    public function plansSubscriptions(Request $request): View
+    {
+        $plans = SubscriptionPlan::all();
+        $subscriptions = Subscription::with(['vendor', 'plan'])->latest()->paginate(15);
+
+        return view('admin.plans-subscriptions', [
+            'plans' => $plans,
+            'subscriptions' => $subscriptions,
+            'activeNav' => 'plans_auto',
+        ]);
+    }
+
+    /**
+     * Super Admin Console: User Plans - Manual/Prepaid Wire & Cash Approvals.
+     */
+    public function plansManual(Request $request): View
+    {
+        $plans = SubscriptionPlan::where('is_active', true)->get();
+        $vendors = Vendor::where('status', 'active')->get();
+
+        return view('admin.plans-manual', [
+            'plans' => $plans,
+            'vendors' => $vendors,
+            'activeNav' => 'plans_manual',
+        ]);
+    }
+
+    /**
+     * Super Admin Console: Static / CMS Landing Pages Manager.
+     */
+    public function pages(Request $request): View
+    {
+        return view('admin.pages', [
+            'activeNav' => 'pages',
+        ]);
+    }
+
+    /**
+     * Super Admin Console: Multi-language Translations Manager.
+     */
+    public function languages(Request $request): View
+    {
+        return view('admin.languages', [
+            'activeNav' => 'languages',
+        ]);
+    }
+
+    /**
+     * Super Admin Console: System Core Setup & Environment Health.
+     */
+    public function setup(Request $request): View
+    {
+        return view('admin.setup', [
+            'activeNav' => 'setup',
+        ]);
+    }
+
+    /**
+     * Super Admin Console: Meta WhatsApp Cloud API Embedded Signup App Configuration.
+     */
+    public function embeddedSignup(Request $request): View
+    {
+        return view('admin.embedded-signup', [
+            'activeNav' => 'embedded_signup',
+        ]);
+    }
+
+    /**
+     * Super Admin Console: Global System Settings (General, User, Currency, Payments, Plans, Email, Logins, Misc).
+     */
+    public function settings(Request $request, ?string $tab = 'general'): View
+    {
+        $validTabs = ['general', 'user', 'currency', 'payment', 'subscription-plans', 'email', 'social-login', 'misc'];
+        if (!in_array($tab, $validTabs)) {
+            $tab = 'general';
+        }
+
+        $plans = SubscriptionPlan::all();
+
+        return view('admin.settings', [
+            'tab' => $tab,
+            'plans' => $plans,
+            'activeNav' => 'settings_' . str_replace('-', '_', $tab),
+        ]);
+    }
+
 
     /**
      * Create a new Vendor and assign owner & custom section permissions.

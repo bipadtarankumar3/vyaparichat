@@ -38,11 +38,34 @@ Route::get('/integrations', [DashboardController::class, 'integrations'])->name(
 
 // Super Admin Central Console & Impersonation
 Route::middleware(['auth', \App\Http\Middleware\SuperAdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Admin\AdminVendorController::class, 'index'])->name('dashboard');
+    // 1. Dashboard
+    Route::get('/', [\App\Http\Controllers\Admin\AdminVendorController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\Admin\AdminVendorController::class, 'dashboard'])->name('console');
+
+    // 2. User Plans (Auto Recurring & Manual/Prepaid)
+    Route::get('/plans/subscriptions', [\App\Http\Controllers\Admin\AdminVendorController::class, 'plansSubscriptions'])->name('plans.subscriptions');
+    Route::get('/plans/manual', [\App\Http\Controllers\Admin\AdminVendorController::class, 'plansManual'])->name('plans.manual');
+
+    // 3. Users / Vendors Management & Impersonation
     Route::get('/vendors', [\App\Http\Controllers\Admin\AdminVendorController::class, 'index'])->name('vendors');
     Route::post('/vendors', [\App\Http\Controllers\Admin\AdminVendorController::class, 'store'])->name('vendors.store');
     Route::post('/vendors/{vendor}/status', [\App\Http\Controllers\Admin\AdminVendorController::class, 'toggleStatus'])->name('vendors.status');
     Route::post('/vendors/{vendor}/permissions', [\App\Http\Controllers\Admin\AdminVendorController::class, 'updatePermissions'])->name('vendors.permissions');
     Route::post('/vendors/{vendor}/impersonate', [\App\Http\Controllers\Admin\AdminVendorController::class, 'impersonate'])->name('vendors.impersonate');
     Route::post('/impersonate/leave', [\App\Http\Controllers\Admin\AdminVendorController::class, 'leaveImpersonation'])->name('impersonate.leave');
+
+    // 4. Static / CMS Landing Pages
+    Route::get('/pages', [\App\Http\Controllers\Admin\AdminVendorController::class, 'pages'])->name('pages');
+
+    // 5. Languages & Translations
+    Route::get('/languages', [\App\Http\Controllers\Admin\AdminVendorController::class, 'languages'])->name('languages');
+
+    // 6. Setup & System Environment
+    Route::get('/setup', [\App\Http\Controllers\Admin\AdminVendorController::class, 'setup'])->name('setup');
+
+    // 7. Embedded Signup (Meta WhatsApp Cloud API Onboarding)
+    Route::get('/embedded-signup', [\App\Http\Controllers\Admin\AdminVendorController::class, 'embeddedSignup'])->name('embedded-signup');
+
+    // 8. Global System Settings (General, User, Currency, Payments, Plans, Email, Logins, Appearance)
+    Route::get('/settings/{tab?}', [\App\Http\Controllers\Admin\AdminVendorController::class, 'settings'])->name('settings');
 });
