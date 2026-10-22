@@ -208,10 +208,24 @@ class AdminVendorManagementTest extends TestCase
         $autoResponse->assertSee('Auto Subscriptions');
         $autoResponse->assertSee('Automated Gateway Recurring');
 
+        $plan = SubscriptionPlan::firstOrCreate(
+            ['slug' => 'starter-plan'],
+            ['title' => 'Starter Plan', 'price_monthly' => 499, 'max_contacts' => 500, 'max_messages_monthly' => 1000]
+        );
+        \App\Models\ManualPaymentRequest::create([
+            'vendor_id' => $this->testVendor->id,
+            'subscription_plan_id' => $plan->id,
+            'amount' => 499,
+            'currency' => 'INR',
+            'payment_method' => 'bank_wire',
+            'reference_number' => 'REF123456',
+            'status' => 'pending',
+        ]);
+
         $manualResponse = $this->actingAs($this->superAdmin)->get('/admin/plans/manual');
         $manualResponse->assertStatus(200);
         $manualResponse->assertSee('Manual & Prepaid Subscriptions', false);
-        $manualResponse->assertSee('Pending Approval');
+        $manualResponse->assertSee('Approve');
     }
 
     /**
@@ -219,6 +233,15 @@ class AdminVendorManagementTest extends TestCase
      */
     public function test_super_admin_can_access_all_admin_management_menus(): void
     {
+        \App\Models\Page::firstOrCreate(
+            ['slug' => 'terms-of-service'],
+            ['title' => 'Terms of Service & User Agreement', 'type' => 'Legal / Policy', 'status' => 'published']
+        );
+        \App\Models\Language::firstOrCreate(
+            ['code' => 'en'],
+            ['name' => 'English (US / UK)', 'direction' => 'ltr', 'status' => 'active', 'is_default' => true]
+        );
+
         // 4. Pages
         $pagesRes = $this->actingAs($this->superAdmin)->get('/admin/pages');
         $pagesRes->assertStatus(200);

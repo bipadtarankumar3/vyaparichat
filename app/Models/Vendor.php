@@ -134,6 +134,13 @@ class Vendor extends Model
             ->latestOfMany();
     }
 
+    public function currentSubscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class)
+            ->where('status', 'active')
+            ->latestOfMany();
+    }
+
     /**
      * Get vendor's public API key.
      */

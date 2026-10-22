@@ -18,6 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/webhook/*',
             'webhook/*',
         ]);
+
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
+            'vendor' => \App\Http\Middleware\VendorAccessMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
