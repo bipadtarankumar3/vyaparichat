@@ -56,37 +56,6 @@
         </x-slot>
     </x-lw.input-field>
     <!-- /Assign Team Member -->
-    <!-- Labels / Tags -->
-    <x-lw.input-field type="selectize" data-lw-plugin="lwSelectize" id="lwEditSelectLabelsField" data-form-group-class="mb-1" data-selected="<%- __tData.existingLabelIds %>" :label="__tr('Labels/Tags')" name="contact_labels[]" multiple data-create="true" placeholder="{{ __tr('Select or type new tag...') }}">
-        <x-slot name="selectOptions">
-            <option value="">{{ __tr('Select or type new tag...') }}</option>
-            @if(!empty($allLabels))
-            @foreach($allLabels as $label)
-            <option value="{{ $label['_id'] }}">{{ $label['title'] }}</option>
-            @endforeach
-            @endif
-        </x-slot>
-    </x-lw.input-field>
-    <small class="text-muted d-block mb-3">{{ __tr('Select existing tags or type to create a new tag and press Enter.') }}</small>
-    <!-- /Labels / Tags -->
-    <style>
-    #lwEditContact .selectize-input .item {
-        background-color: #17a2b8 !important;
-        color: #ffffff !important;
-        border-radius: 4px !important;
-        padding: 3px 8px !important;
-        margin: 2px 3px !important;
-        font-size: 13px !important;
-        font-weight: 500 !important;
-        border: none !important;
-    }
-    #lwEditContact .selectize-input .item .remove {
-        border-left: 1px solid rgba(255,255,255,0.4) !important;
-        margin-left: 6px !important;
-        padding-left: 4px !important;
-        color: #ffffff !important;
-    }
-    </style>
     <!-- Notes -->
     <div class="form-group">
         <label for="lwEditContactNotes">{{ __tr('Notes') }}</label>

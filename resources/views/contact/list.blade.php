@@ -373,7 +373,7 @@ $groupDescription = $groupUid ? $currentGroup->description : '';
             } );">
 
             <!-- Unified Contacts Control Panel -->
-            <div class="card shadow-sm border-0 mb-4" style="position: relative; z-index: 1050;">
+            <div class="card shadow-sm border-0 mb-4" style="position: relative; z-index: 5;">
                 <div class="card-body p-3" style="overflow: visible;">
                     <!-- Top Row: Tabs on Left, Action Buttons on Right -->
                     <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 border-bottom mb-3">
@@ -423,13 +423,13 @@ $groupDescription = $groupUid ? $currentGroup->description : '';
                             <button x-show="isSelectedAll" class="btn btn-outline-dark btn-sm mr-2 shadow-sm font-weight-bold" @click="toggleAll">
                                 <i class="far fa-square mr-1"></i> {{ __tr('Unselect All') }}
                             </button>
-                            <div class="btn-group" style="position: relative; z-index: 1060;">
+                            <div class="btn-group" style="position: relative; z-index: 6;">
                                 <button :class="!selectedContacts.length ? 'disabled' : ''"
                                     class="btn btn-danger btn-sm dropdown-toggle shadow-sm font-weight-bold" type="button" data-toggle="dropdown"
                                     aria-expanded="false">
                                     <i class="fas fa-tasks mr-1"></i> {{ __tr('Bulk Actions') }}
                                 </button>
-                                <div class="dropdown-menu shadow-lg" style="z-index: 1070;">
+                                <div class="dropdown-menu shadow-lg" style="z-index: 10;">
                                     <a class="dropdown-item" @click.prevent="deleteSelectedContacts" href="#"><i class="fas fa-trash text-danger mr-2"></i> {{ __tr('Delete Selected Contacts') }}</a>
                                     <a class="dropdown-item" data-toggle="modal" data-target="#lwAssignGroups" href="#"><i class="fas fa-tags text-primary mr-2"></i> {{ __tr('Assign Group to Selected Contacts') }}</a>
                                 </div>
