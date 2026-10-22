@@ -112,4 +112,22 @@ class Vendor extends Model
             ->where('ends_at', '>', now())
             ->latestOfMany();
     }
+
+    /**
+     * Get vendor's public API key.
+     */
+    public function getApiKey(): ?string
+    {
+        return $this->getSetting('api_key');
+    }
+
+    /**
+     * Generate or rotate vendor's public API key.
+     */
+    public function generateApiKey(): string
+    {
+        $key = 'vyapari_live_' . \Illuminate\Support\Str::random(32);
+        $this->setSetting('api_key', $key);
+        return $key;
+    }
 }

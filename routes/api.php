@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\EcommerceWebhookController;
 use App\Http\Controllers\Api\PaymentWebhookController;
+use App\Http\Controllers\Api\PublicApiController;
 use App\Http\Controllers\Api\WhatsAppWebhookController;
 use App\Http\Controllers\Vendor\BillingController;
 use App\Http\Controllers\Vendor\BotFlowController;
@@ -106,6 +108,20 @@ Route::prefix('billing')->group(function () {
 Route::prefix('webhook/payments')->group(function () {
     Route::post('/stripe', [PaymentWebhookController::class, 'stripeWebhook'])->name('api.payment.webhook.stripe');
     Route::post('/razorpay', [PaymentWebhookController::class, 'razorpayWebhook'])->name('api.payment.webhook.razorpay');
+});
+
+// E-Commerce Automation Webhooks (Shopify & WooCommerce)
+Route::prefix('webhook/ecommerce/{vendorUuid}')->group(function () {
+    Route::post('/shopify/orders-create', [EcommerceWebhookController::class, 'shopifyOrderCreated'])->name('api.ecommerce.shopify.order_created');
+    Route::post('/shopify/orders-fulfill', [EcommerceWebhookController::class, 'shopifyOrderFulfilled'])->name('api.ecommerce.shopify.order_fulfilled');
+    Route::post('/woocommerce/orders', [EcommerceWebhookController::class, 'woocommerceOrder'])->name('api.ecommerce.woocommerce.order');
+});
+
+// Public Developer REST API v1 (Secured with Vendor API Key)
+Route::prefix('v1')->middleware(\App\Http\Middleware\AuthenticateWithVendorApiKey::class)->group(function () {
+    Route::post('/send-message', [PublicApiController::class, 'sendMessage'])->name('api.v1.send_message');
+    Route::post('/send-template', [PublicApiController::class, 'sendTemplate'])->name('api.v1.send_template');
+    Route::post('/contacts/upsert', [PublicApiController::class, 'upsertContact'])->name('api.v1.contacts_upsert');
 });
 
 // Health check endpoint
