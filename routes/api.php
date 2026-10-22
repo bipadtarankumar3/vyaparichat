@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\WhatsAppWebhookController;
 use App\Http\Controllers\Vendor\CampaignController;
+use App\Http\Controllers\Vendor\ChatInboxController;
 use App\Http\Controllers\Vendor\ContactController;
 use App\Http\Controllers\Vendor\ContactCustomFieldController;
 use App\Http\Controllers\Vendor\ContactGroupController;
@@ -70,6 +71,17 @@ Route::prefix('campaigns')->group(function () {
     Route::post('/{campaign}/resume', [CampaignController::class, 'resume'])->name('api.campaigns.resume');
     Route::post('/{campaign}/cancel', [CampaignController::class, 'cancel'])->name('api.campaigns.cancel');
     Route::get('/{campaign}/stats', [CampaignController::class, 'stats'])->name('api.campaigns.stats');
+});
+
+// Live Chat Inbox & Multi-Agent Messaging
+Route::prefix('chat')->group(function () {
+    Route::get('/conversations', [ChatInboxController::class, 'conversations'])->name('api.chat.conversations');
+    Route::get('/conversations/{contact}/messages', [ChatInboxController::class, 'messages'])->name('api.chat.messages');
+    Route::post('/conversations/{contact}/send', [ChatInboxController::class, 'sendMessage'])->name('api.chat.send');
+    Route::post('/conversations/{contact}/assign', [ChatInboxController::class, 'assignAgent'])->name('api.chat.assign');
+    Route::post('/conversations/{contact}/mark-read', [ChatInboxController::class, 'markAsRead'])->name('api.chat.mark_read');
+    Route::post('/conversations/{contact}/toggle-bot', [ChatInboxController::class, 'toggleBot'])->name('api.chat.toggle_bot');
+    Route::post('/conversations/{contact}/notes', [ChatInboxController::class, 'updateNotes'])->name('api.chat.notes');
 });
 
 // Health check endpoint
