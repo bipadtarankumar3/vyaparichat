@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\WhatsAppWebhookController;
+use App\Http\Controllers\Vendor\CampaignController;
 use App\Http\Controllers\Vendor\ContactController;
 use App\Http\Controllers\Vendor\ContactCustomFieldController;
 use App\Http\Controllers\Vendor\ContactGroupController;
@@ -55,6 +56,20 @@ Route::prefix('whatsapp/templates')->group(function () {
     Route::get('/{template}', [WhatsAppTemplateController::class, 'show'])->name('api.whatsapp_templates.show');
     Route::post('/{template}/preview', [WhatsAppTemplateController::class, 'preview'])->name('api.whatsapp_templates.preview');
     Route::delete('/{template}', [WhatsAppTemplateController::class, 'destroy'])->name('api.whatsapp_templates.destroy');
+});
+
+// Broadcast Campaigns Management & Dispatcher
+Route::prefix('campaigns')->group(function () {
+    Route::get('/', [CampaignController::class, 'index'])->name('api.campaigns.index');
+    Route::post('/', [CampaignController::class, 'store'])->name('api.campaigns.store');
+    Route::get('/{campaign}', [CampaignController::class, 'show'])->name('api.campaigns.show');
+    Route::put('/{campaign}', [CampaignController::class, 'update'])->name('api.campaigns.update');
+    Route::delete('/{campaign}', [CampaignController::class, 'destroy'])->name('api.campaigns.destroy');
+    Route::post('/{campaign}/launch', [CampaignController::class, 'launch'])->name('api.campaigns.launch');
+    Route::post('/{campaign}/pause', [CampaignController::class, 'pause'])->name('api.campaigns.pause');
+    Route::post('/{campaign}/resume', [CampaignController::class, 'resume'])->name('api.campaigns.resume');
+    Route::post('/{campaign}/cancel', [CampaignController::class, 'cancel'])->name('api.campaigns.cancel');
+    Route::get('/{campaign}/stats', [CampaignController::class, 'stats'])->name('api.campaigns.stats');
 });
 
 // Health check endpoint
