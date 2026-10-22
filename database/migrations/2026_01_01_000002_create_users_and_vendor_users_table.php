@@ -13,11 +13,25 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->boolean('is_super_admin')->default(false)->index();
+            $table->string('status', 30)->default('active')->index();
             $table->rememberToken();
+            $table->timestamps();
+        });
+
+        Schema::create('vendor_users', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('vendor_id')->constrained('vendors')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('role', 30)->default('agent')->index(); // 'admin', 'manager', 'agent'
+            $table->json('permissions')->nullable();
+            $table->string('status', 30)->default('active')->index();
+            $table->unique(['vendor_id', 'user_id']);
             $table->timestamps();
         });
 
@@ -42,8 +56,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('vendor_users');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
     }
 };
