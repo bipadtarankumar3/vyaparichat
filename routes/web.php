@@ -1031,7 +1031,7 @@ Route::middleware([
                     'toggleAiBot',
                 ])->name('vendor.contact.write.toggle_ai_bot');
 
-                Route::get('/export/{exportType?}', [
+                Route::match(['get', 'post'], '/export/{exportType?}', [
                     ContactController::class,
                     'exportContacts',
                 ])->name('vendor.contact.write.export');

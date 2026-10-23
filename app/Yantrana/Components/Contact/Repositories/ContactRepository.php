@@ -359,11 +359,43 @@ class ContactRepository extends BaseRepository implements ContactRepositoryInter
      *
      * @return LazyCollection
      */
-    public function getAllContactsForTheVendorLazily($vendorId, $callback)
+    public function getAllContactsForTheVendorLazily($vendorId, $callback, $filters = [])
     {
-        return $this->primaryModel::with(['groups', 'customFieldValues', 'assignedUser', 'labels'])->where([
+        $query = $this->primaryModel::with(['groups', 'customFieldValues', 'assignedUser', 'labels'])->where([
             'vendors__id' => $vendorId
-        ])->orderBy('contacts.created_at', 'desc')->orderBy('contacts._id', 'desc')->lazy()->each($callback);
+        ]);
+
+        // Date range filtering
+        $fromDate = $filters['from_date'] ?? request('from_date');
+        $toDate = $filters['to_date'] ?? request('to_date');
+        if (!__isEmpty($fromDate)) {
+            $query->where('contacts.created_at', '>=', \Carbon\Carbon::parse($fromDate)->startOfDay());
+        }
+        if (!__isEmpty($toDate)) {
+            $query->where('contacts.created_at', '<=', \Carbon\Carbon::parse($toDate)->endOfDay());
+        }
+
+        // Tab filtering: live_chat vs imported vs all
+        $contactTab = $filters['contact_tab'] ?? request('contact_tab');
+        if ($contactTab == 'live_chat') {
+            $query->whereExists(function ($subQuery) {
+                $subQuery->select(DB::raw(1))
+                    ->from('whatsapp_message_logs')
+                    ->whereColumn('whatsapp_message_logs.contacts__id', 'contacts._id');
+            });
+        } elseif ($contactTab == 'imported') {
+            $query->where(function ($q) {
+                $q->where('contacts.__data->is_imported', 1)
+                  ->orWhere('contacts.__data->is_imported', true)
+                  ->orWhereNotExists(function ($subQuery) {
+                      $subQuery->select(DB::raw(1))
+                          ->from('whatsapp_message_logs')
+                          ->whereColumn('whatsapp_message_logs.contacts__id', 'contacts._id');
+                  });
+            });
+        }
+
+        return $query->orderBy('contacts.created_at', 'desc')->orderBy('contacts._id', 'desc')->lazy()->each($callback);
     }
 
     /**

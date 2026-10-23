@@ -116,20 +116,58 @@ $groupDescription = $groupUid ? $currentGroup->description : '';
         </x-lw.modal>
         {{-- /import contacts --}}
         {{-- export contacts --}}
-        <x-lw.modal id="lwExportDialog" :header="__tr('Export Contacts')" :hasForm="true"
-            data-pre-callback="appFuncs.clearContainer">
+        <x-lw.modal id="lwExportDialog" :header="__tr('Export Contacts')" :hasForm="true">
             <div class="lw-form-modal-body p-3">
-                <h5>{{ __tr('Export with Data') }}</h5>
-                <p>{{ __tr('You can export all contacts excel file and import it back with updated data.') }}</p>
-                <a href="{{ route('vendor.contact.write.export', [
-                    'exportType' => 'data'
-                ]) }}" data-method="post" class="btn btn-primary">{{ __('Export Excel File with Data') }}</a>
-                <hr>
-                <h5>{{ __tr('Blank Excel Template') }}</h5>
-                <p>{{ __tr('You can export blank excel file and fill with data according to column header and import it
-                    for updates.') }}</p>
-                <a href="{{ route('vendor.contact.write.export') }}" data-method="post" class="btn btn-primary">{{
-                    __('Export Blank Template') }}</a>
+                <form id="lwExportContactsForm" method="GET" action="{{ route('vendor.contact.write.export') }}">
+                    <input type="hidden" name="exportType" value="data">
+                    <input type="hidden" name="from_date" id="lwExportFromDate" value="">
+                    <input type="hidden" name="to_date" id="lwExportToDate" value="">
+
+                    <div class="card border-0 shadow-sm mb-3" style="background-color: #f8fafc; border-radius: 8px;">
+                        <div class="card-body p-3">
+                            <h6 class="font-weight-bold text-dark mb-2">
+                                <i class="fas fa-filter text-primary mr-1"></i> {{ __tr('Select Contacts to Export') }}
+                            </h6>
+                            <div class="custom-control custom-radio mb-2">
+                                <input type="radio" id="lwExportTabLiveChat" name="contact_tab" value="live_chat" class="custom-control-input lw-export-tab-radio">
+                                <label class="custom-control-label font-weight-bold" for="lwExportTabLiveChat">
+                                    <i class="fab fa-whatsapp text-success mr-1"></i> {{ __tr('Live Chat Contacts') }}
+                                </label>
+                            </div>
+                            <div class="custom-control custom-radio mb-2">
+                                <input type="radio" id="lwExportTabImported" name="contact_tab" value="imported" class="custom-control-input lw-export-tab-radio">
+                                <label class="custom-control-label font-weight-bold" for="lwExportTabImported">
+                                    <i class="fas fa-file-excel text-primary mr-1"></i> {{ __tr('Imported Contacts') }}
+                                </label>
+                            </div>
+                            <div class="custom-control custom-radio">
+                                <input type="radio" id="lwExportTabAll" name="contact_tab" value="all" class="custom-control-input lw-export-tab-radio">
+                                <label class="custom-control-label font-weight-bold" for="lwExportTabAll">
+                                    <i class="fas fa-users text-muted mr-1"></i> {{ __tr('All Contacts') }}
+                                </label>
+                            </div>
+
+                            <div id="lwExportDateInfo" class="mt-3 pt-2 border-top small text-muted">
+                                <i class="fas fa-calendar-alt mr-1"></i> <span id="lwExportDateText">{{ __tr('Date Range: All Dates') }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block shadow-sm font-weight-bold py-2 mb-3">
+                        <i class="fas fa-file-download mr-1"></i> {{ __('Export Excel File with Data') }}
+                    </button>
+                </form>
+
+                <hr class="my-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="font-weight-bold mb-0 text-dark">{{ __tr('Blank Excel Template') }}</h6>
+                        <small class="text-muted">{{ __tr('Export empty template for importing new contacts') }}</small>
+                    </div>
+                    <a href="{{ route('vendor.contact.write.export') }}" class="btn btn-outline-secondary btn-sm font-weight-bold shadow-sm">
+                        <i class="fas fa-file-excel mr-1"></i> {{ __('Export Blank Template') }}
+                    </a>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __tr('Close') }}</button>
@@ -437,6 +475,22 @@ $groupDescription = $groupUid ? $currentGroup->description : '';
                         </div>
 
                         <div class="d-flex flex-wrap align-items-center">
+                            <!-- Quick Date Tags -->
+                            <div class="btn-group btn-group-sm mr-2 mb-1 shadow-sm" id="lwQuickDateFilters" role="group" aria-label="Quick Date Filters">
+                                <button type="button" class="btn btn-outline-primary font-weight-bold lw-quick-date-btn" data-range="today">
+                                    {{ __tr('Today') }}
+                                </button>
+                                <button type="button" class="btn btn-outline-primary font-weight-bold lw-quick-date-btn" data-range="yesterday">
+                                    {{ __tr('Yesterday') }}
+                                </button>
+                                <button type="button" class="btn btn-outline-primary font-weight-bold lw-quick-date-btn" data-range="7days">
+                                    {{ __tr('7 Days') }}
+                                </button>
+                                <button type="button" class="btn btn-outline-primary font-weight-bold lw-quick-date-btn" data-range="30days">
+                                    {{ __tr('30 Days') }}
+                                </button>
+                            </div>
+
                             <div class="input-group input-group-sm mr-2 mb-1" style="width: auto;">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text font-weight-bold"><i class="fas fa-calendar-alt mr-1"></i> {{ __tr('From') }}</span>
@@ -600,6 +654,49 @@ $groupDescription = $groupUid ? $currentGroup->description : '';
         reloadDT('#lwContactList');
     });
 
+    function formatLocalDateYMD(date) {
+        var year = date.getFullYear();
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var day = String(date.getDate()).padStart(2, '0');
+        return year + '-' + month + '-' + day;
+    }
+
+    // Quick date tag filter buttons
+    $('.lw-quick-date-btn').on('click', function(e) {
+        e.preventDefault();
+        var range = $(this).data('range');
+        var today = new Date();
+        var fromStr = '';
+        var toStr = '';
+
+        if (range === 'today') {
+            fromStr = formatLocalDateYMD(today);
+            toStr = formatLocalDateYMD(today);
+        } else if (range === 'yesterday') {
+            var yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+            fromStr = formatLocalDateYMD(yesterday);
+            toStr = formatLocalDateYMD(yesterday);
+        } else if (range === '7days') {
+            var past7 = new Date();
+            past7.setDate(today.getDate() - 6);
+            fromStr = formatLocalDateYMD(past7);
+            toStr = formatLocalDateYMD(today);
+        } else if (range === '30days') {
+            var past30 = new Date();
+            past30.setDate(today.getDate() - 29);
+            fromStr = formatLocalDateYMD(past30);
+            toStr = formatLocalDateYMD(today);
+        }
+
+        $('.lw-quick-date-btn').removeClass('active btn-primary').addClass('btn-outline-primary');
+        $(this).removeClass('btn-outline-primary').addClass('active btn-primary');
+
+        $('#lwFilterFromDate').val(fromStr);
+        $('#lwFilterToDate').val(toStr);
+        reloadDT('#lwContactList');
+    });
+
     // Date filter click
     $('#lwApplyDateFilter').on('click', function(e) {
         e.preventDefault();
@@ -607,16 +704,57 @@ $groupDescription = $groupUid ? $currentGroup->description : '';
     });
 
     // Date input change
-    $('#lwFilterFromDate, #lwFilterToDate').on('change', function() {
+    $('#lwFilterFromDate, #lwFilterToDate').on('input change', function() {
+        $('.lw-quick-date-btn').removeClass('active btn-primary').addClass('btn-outline-primary');
         reloadDT('#lwContactList');
     });
 
     // Reset date filter
     $('#lwResetDateFilter').on('click', function(e) {
         e.preventDefault();
+        $('.lw-quick-date-btn').removeClass('active btn-primary').addClass('btn-outline-primary');
         $('#lwFilterFromDate').val('');
         $('#lwFilterToDate').val('');
         reloadDT('#lwContactList');
+    });
+
+    // When Export Modal is opened, automatically sync with active tab and date filter
+    $('#lwExportDialog').on('show.bs.modal', function() {
+        var currentTab = $('#lwContactTabs .lw-contact-tab.active').data('tab') || 'live_chat';
+        var fromDate = $('#lwFilterFromDate').val() || '';
+        var toDate = $('#lwFilterToDate').val() || '';
+
+        // Pre-select the corresponding radio button
+        $('.lw-export-tab-radio').prop('checked', false);
+        if (currentTab === 'live_chat') {
+            $('#lwExportTabLiveChat').prop('checked', true);
+        } else if (currentTab === 'imported') {
+            $('#lwExportTabImported').prop('checked', true);
+        } else {
+            $('#lwExportTabAll').prop('checked', true);
+        }
+
+        // Set hidden date inputs
+        $('#lwExportFromDate').val(fromDate);
+        $('#lwExportToDate').val(toDate);
+
+        // Update notice text
+        if (fromDate && toDate) {
+            $('#lwExportDateText').html('{{ __tr('Date Range:') }} <strong>' + fromDate + '</strong> {{ __tr('to') }} <strong>' + toDate + '</strong>');
+        } else if (fromDate) {
+            $('#lwExportDateText').html('{{ __tr('Date Range: From') }} <strong>' + fromDate + '</strong>');
+        } else if (toDate) {
+            $('#lwExportDateText').html('{{ __tr('Date Range: Up to') }} <strong>' + toDate + '</strong>');
+        } else {
+            $('#lwExportDateText').text('{{ __tr('Date Range: All Dates') }}');
+        }
+    });
+
+    // Close modal after triggering download form submit
+    $('#lwExportContactsForm').on('submit', function() {
+        setTimeout(function() {
+            $('#lwExportDialog').modal('hide');
+        }, 600);
     });
 
     // FilePond upload detector

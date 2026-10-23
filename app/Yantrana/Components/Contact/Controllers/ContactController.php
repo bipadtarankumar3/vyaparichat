@@ -300,8 +300,8 @@ class ContactController extends BaseController
      */
     public function exportContacts($exportType = null)
     {
-
         validateVendorAccess('manage_contacts');
+        $exportType = $exportType ?: request('exportType', 'blank');
         return $this->contactEngine->processExportContacts($exportType);
     }
 

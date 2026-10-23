@@ -752,6 +752,11 @@ class ContactEngine extends BaseEngine implements ContactEngineInterface
         $tempFile = tempnam(sys_get_temp_dir(), "exported_contacts_{$vendorId}.xlsx");
         $writer = new XLSXWriter();
         $writer->writeSheetHeader('Contacts', $header);
+        $exportType = $exportType ?: request('exportType', 'blank');
+        $contactTab = request('contact_tab');
+        $fromDate = request('from_date');
+        $toDate = request('to_date');
+
         if ($exportType == 'data') {
             if (isDemo() and isDemoVendorAccount()) {
                 abort(403, __tr('Exporting Contacts data has been disabled for demo'));
@@ -819,14 +824,23 @@ class ContactEngine extends BaseEngine implements ContactEngineInterface
                 // write to sheet
                 $writer->writeSheetRow('Contacts', $dataItem);
                 unset($dataItem);
-            });
+            }, [
+                'contact_tab' => $contactTab,
+                'from_date' => $fromDate,
+                'to_date' => $toDate,
+            ]);
         }
         // write to file
         $writer->writeToFile($tempFile);
         // file name
+        $tabSlug = $contactTab ? str_slug($contactTab) : 'all';
         $dateTime = str_slug(now()->format('Y-m-d-H-i-s'));
+        $fileName = ($exportType == 'data')
+            ? "contacts-{$tabSlug}-{$dateTime}.xlsx"
+            : "contacts-template-{$dateTime}.xlsx";
+
         // get back with response
-        return response()->download($tempFile, "contacts-{$exportType}-{$dateTime}.xlsx", [
+        return response()->download($tempFile, $fileName, [
             'Content-Transfer-Encoding: binary',
             'Content-Type: application/octet-stream',
         ])->deleteFileAfterSend();
