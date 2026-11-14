@@ -17,19 +17,21 @@ class ContactController extends BaseVendorController
     {
         $vendor = $this->getActiveVendor($request);
         $groups = ContactGroup::where('vendor_id', $vendor->id)->get();
-        $query = Contact::where('vendor_id', $vendor->id)->with('group');
+        $query = Contact::where('vendor_id', $vendor->id)->with(['groups', 'labels']);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
                   ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('phone_number', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
         if ($groupId = $request->input('group_id')) {
-            $query->where('contact_group_id', $groupId);
+            $query->whereHas('groups', function ($q) use ($groupId) {
+                $q->where('contact_groups.id', $groupId);
+            });
         }
 
         $contacts = $query->latest()->paginate(20)->withQueryString();
@@ -60,7 +62,7 @@ class ContactController extends BaseVendorController
 
         $phone = preg_replace('/[^0-9+]/', '', $validated['phone']);
 
-        Contact::create([
+        $contact = Contact::create([
             'vendor_id' => $vendor->id,
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'] ?? null,
@@ -68,6 +70,10 @@ class ContactController extends BaseVendorController
             'email' => $validated['email'] ?? null,
             'notes' => $validated['lead_status'] ?? 'new',
         ]);
+
+        if (!empty($validated['contact_group_id'])) {
+            $contact->groups()->sync([$validated['contact_group_id']]);
+        }
 
         return back()->with('success', "Contact \"{$validated['first_name']}\" created successfully.");
     }
@@ -98,6 +104,10 @@ class ContactController extends BaseVendorController
             'email' => $validated['email'] ?? null,
             'notes' => $validated['lead_status'] ?? $contact->notes,
         ]);
+
+        if (array_key_exists('contact_group_id', $validated)) {
+            $contact->groups()->sync(array_filter([$validated['contact_group_id']]));
+        }
 
         return back()->with('success', "Contact \"{$contact->first_name}\" updated successfully.");
     }

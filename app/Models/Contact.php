@@ -59,6 +59,11 @@ class Contact extends Model
         return $this->belongsToMany(ContactGroup::class, 'contact_group_pivot');
     }
 
+    public function group(): BelongsToMany
+    {
+        return $this->groups();
+    }
+
     public function labels(): BelongsToMany
     {
         return $this->belongsToMany(Label::class, 'contact_label_pivot');
