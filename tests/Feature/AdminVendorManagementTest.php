@@ -271,6 +271,20 @@ class AdminVendorManagementTest extends TestCase
         $settingsRes->assertStatus(200);
         $settingsRes->assertSee('Razorpay Gateway');
         $settingsRes->assertSee('Stripe Recurring Subscriptions');
+
+        \App\Models\SubscriptionPlan::create([
+            'title' => 'Growth Business Plan',
+            'slug' => 'growth-business-plan',
+            'price_monthly' => 1499,
+            'price_yearly' => 14990,
+            'max_contacts' => 5000,
+            'max_messages_monthly' => 50000,
+        ]);
+
+        $plansSettingsRes = $this->actingAs($this->superAdmin)->get('/admin/settings/subscription-plans');
+        $plansSettingsRes->assertStatus(200);
+        $plansSettingsRes->assertSee('Subscription Tiers & Quota Limits', false);
+        $plansSettingsRes->assertSee('Growth Business Plan');
     }
 }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\SubscriptionPlan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -14,10 +15,13 @@ class SettingController extends Controller
      */
     public function index(Request $request, string $tab = 'general'): View
     {
+        $plans = SubscriptionPlan::latest()->get();
+
         return view('admin.settings.index', [
             'tab' => $tab,
             'currentTab' => $tab,
             'activeNav' => 'settings_' . $tab,
+            'plans' => $plans,
         ]);
     }
 

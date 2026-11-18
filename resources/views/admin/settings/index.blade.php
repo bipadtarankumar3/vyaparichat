@@ -221,7 +221,7 @@
             </div>
 
             <div class="space-y-4">
-                @foreach($plans as $plan)
+                @forelse($plans ?? [] as $plan)
                 <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
                         <div class="flex items-center gap-2">
@@ -231,14 +231,18 @@
                             </span>
                         </div>
                         <div class="text-xs text-slate-400 mt-1">
-                            {{ number_format($plan->max_messages_monthly) }} msgs • {{ number_format($plan->max_contacts) }} contacts • {{ $plan->max_team_members ?? 5 }} team seats
+                            {{ number_format($plan->max_messages_monthly ?? 0) }} msgs • {{ number_format($plan->max_contacts ?? 0) }} contacts • {{ $plan->max_team_members ?? $plan->max_staff_members ?? 5 }} team seats
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button type="button" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition">Edit Quotas</button>
+                        <a href="{{ route('admin.plans.subscriptions') }}" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition">Edit Quotas</a>
                     </div>
                 </div>
-                @endforeach
+                @empty
+                <div class="p-6 text-center text-slate-500 bg-slate-950 rounded-xl border border-slate-800 text-xs">
+                    No subscription tiers configured yet.
+                </div>
+                @endforelse
             </div>
         </div>
 
